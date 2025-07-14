@@ -10,12 +10,8 @@ CURSOR_INIT				EQU		FFFFh
 FIM_TEXTO       		EQU     '@'
 MAP_LINE_LENGTH			EQU		81d
 MAP_NUMBER_LINE			EQU		24d
-LINHA_INICIAL_PACMAN 	EQU 	13d
-LINHA_MORTE_PACMAN_UP 	EQU 	14d
-LINHA_MORTE_PACMAN_DOWN	EQU 	12d
+LINHA_INICIAL_PACMAN 	EQU 	10d
 COLUNA_INICIAL_PACMAN 	EQU 	39d
-LINHA_GHOST_MIDDLE		EQU		3d
-COLUNA_GHOST_MIDDLE		EQU		39d
 TIMER_UNITS				EQU		FFF6h
 ACTIVATE_TIMER			EQU		FFF7h
 OFF						EQU		0d
@@ -36,26 +32,26 @@ BASE_ACSII				EQU 	48d
 ORIG    8000h
 
 L0	 STR '################################################################################', FIM_TEXTO
-L1	 STR '##########...X....................................................X...##########', FIM_TEXTO
-L2	 STR '...........#.#######.#########.##################.#########.#######.#...........', FIM_TEXTO
-L3	 STR '##.#######.#.#######.#########.####....X.....####.#########.#######.#.#######.##', FIM_TEXTO
+L1	 STR '##########............................................................##########', FIM_TEXTO
+L2	 STR '...........#.#######.#########.####.##.##.##.####.#########.#######.#...........', FIM_TEXTO
+L3	 STR '##.#######.#.#######.#########.####..........####.#########.#######.#.#######.##', FIM_TEXTO
 L4	 STR '##..................................########..................................##', FIM_TEXTO
 L5	 STR '##.#.#####.#.#######.#########.####..........####.#########.#######.#.#####.#.##', FIM_TEXTO
-L6	 STR '##.#.#####.#.#######.#########.##################.#########.#######.#.#####.#.##', FIM_TEXTO
-L7	 STR '##............................................................................##', FIM_TEXTO
-L8	 STR '##.#######################.####.#######  #######.####.#######################.##', FIM_TEXTO
+L6	 STR '##.#.#####.#.#######.#########.####.##.##.##.####.#########.#######.#.#####.#.##', FIM_TEXTO
+L7	 STR '##...........X....................................................X...........##', FIM_TEXTO
+L8	 STR '##.#######################.####.## ####  #### ##.####.#######################.##', FIM_TEXTO
 L9	 STR '##............############.####.#              #.####.###########.............##', FIM_TEXTO
-L10	 STR '#############...................#              #..................##############', FIM_TEXTO
-L11	 STR '..............############.####.#              #.####.###########...............', FIM_TEXTO
-L12	 STR '#############.############.####.################.####.###########.##############', FIM_TEXTO
-L13	 STR '##.....................................C......................................##', FIM_TEXTO
+L10	 STR '#############...................#      C       #..................##############', FIM_TEXTO
+L11	 STR '.........X....############.####.#              #.####.###########.....X.........', FIM_TEXTO
+L12	 STR '#############.############.####.# #####  ##### #.####.###########.##############', FIM_TEXTO
+L13	 STR '##............................................................................##', FIM_TEXTO
 L14	 STR '##.#.########.############.##########.####.##########.###########.#########.#.##', FIM_TEXTO
 L15	 STR '##.#.########.############.##########.####.##########.###########.#########.#.##', FIM_TEXTO
 L16	 STR '##.#.######..........................................................######.#.##', FIM_TEXTO
 L17	 STR '##.#.######.####################.#.##.####.##.#.####################.######.#.##', FIM_TEXTO
 L18	 STR '##.#.######.####################.#.##.####.##.#.####################.######.#.##', FIM_TEXTO
-L19	 STR '##.#.######.##########....................................##########.######.#.##', FIM_TEXTO
-L20	 STR '.........X.............##################################.............X.........', FIM_TEXTO
+L19	 STR '##.#.######.##########.................X..................##########.######.#.##', FIM_TEXTO
+L20	 STR '.......................##################################.......................', FIM_TEXTO
 L21	 STR '################################################################################', FIM_TEXTO
 L22	 STR '## LIVES: <3 <3 <3 ##############################################  SCORE:000  ##', FIM_TEXTO
 L23	 STR '################################################################################', FIM_TEXTO
@@ -119,8 +115,6 @@ L23L STR '######################################################################
 TextIndex		 WORD	0d
 LinhaPacman      WORD   LINHA_INICIAL_PACMAN
 ColunaPacman     WORD   COLUNA_INICIAL_PACMAN
-LinhaGhost0		 WORD	LINHA_GHOST_MIDDLE
-ColunaGhost0	 WORD	COLUNA_GHOST_MIDDLE
 Pacman		 	 WORD	'C'
 Apaga			 WORD	' '
 Row_index		 WORD	0d
@@ -130,8 +124,18 @@ PacmanDirection	 WORD	NO_DIRECTION
 Score			 WORD   0d
 Lives_position   WORD	17d
 Died			 WORD	0d
-TempLinha       WORD    0d
-TempColuna      WORD    0d
+Ghost			 WORD	'X'
+LinhaGhost0		 WORD	19d
+ColunaGhost0	 WORD	39d
+LinhaGhost1		 WORD	7d
+ColunaGhost1	 WORD	13d
+LinhaGhost2		 WORD	7d
+ColunaGhost2	 WORD	66d
+LinhaGhost3		 WORD	11d
+ColunaGhost3	 WORD	9d
+LinhaGhost4		 WORD	11d
+ColunaGhost4	 WORD	70d
+Ponto			 WORD   '.'
 
 
 ;------------------------------------------------------------------------------
@@ -177,7 +181,36 @@ Timer:	PUSH R1
 		CMP R1, RIGHT
 		CALL.Z PacmanRight
 
-		CALL GhostMove
+		MOV R3, M[ColunaGhost0]
+	   	MOV R4, M[LinhaGhost0]
+	   	CALL MoveGhost
+	   	MOV M[ColunaGhost0], R3
+	   	MOV M[LinhaGhost0], R4
+
+		MOV R3, M[ColunaGhost1]
+	   	MOV R4, M[LinhaGhost1]
+	   	CALL MoveGhost
+	   	MOV M[ColunaGhost1], R3
+	   	MOV M[LinhaGhost1], R4
+
+		MOV R3, M[ColunaGhost2]
+	   	MOV R4, M[LinhaGhost2]
+	   	CALL MoveGhost
+	   	MOV M[ColunaGhost2], R3
+	   	MOV M[LinhaGhost2], R4
+
+		MOV R3, M[ColunaGhost3]
+	   	MOV R4, M[LinhaGhost3]
+	   	CALL MoveGhost
+	   	MOV M[ColunaGhost3], R3
+	   	MOV M[LinhaGhost3], R4
+
+		MOV R3, M[ColunaGhost4]
+	   	MOV R4, M[LinhaGhost4]
+	   	CALL MoveGhost
+	   	MOV M[ColunaGhost4], R3
+	   	MOV M[LinhaGhost4], R4
+
 
 
 EndTimer:	CALL TimerConfig
@@ -405,10 +438,10 @@ Die: 	PUSH R1
 
 		MOV M[LinhaPacman], R4
 		MOV M[ColunaPacman], R3
-		
+
 		MOV R5, NO_DIRECTION
 		MOV M[PacmanDirection], R5
-
+		
 		CALL PrintPacman
 
 		POP R5
@@ -484,153 +517,231 @@ ApagaPacman:	PUSH R1
 ;--------------------------------------------------------------------------------------
 ; Apaga Fantasma
 ;--------------------------------------------------------------------------------------
-ApagaGhost: PUSH R1
-            PUSH R2
-            PUSH R3
-            
-            MOV R3, M[Apaga]
-            MOV R1, M[LinhaGhost0]
-            MOV R2, M[ColunaGhost0]
-            SHL R1, 8d
-            OR R1, R2
-            MOV M[CURSOR], R1
-            MOV M[WRITE], R3
-            
-            POP R3
-            POP R2
-            POP R1
-            RET
 
 ;--------------------------------------------------------------------------------------
 ; Movimento Fantasma - Versão Final
 ;--------------------------------------------------------------------------------------
-GhostMove:  PUSH R1
-            PUSH R2
-            PUSH R3
-            PUSH R4
-            PUSH R5
-            PUSH R6
-            PUSH R7
+VerificaCol:   PUSH R3
+			   PUSH R4
+			   PUSH R5
+			   PUSH R6
 
-            ; Apaga o fantasma da posição atual
-            CALL ApagaGhost
+    		   MOV R5, R4
+    		   MOV R6, 81d
+    		   MUL R5, R6             ; R5 = nova_linha * 81
+    		   ADD R6, R3             ; R6 = posição linear
+    		   ADD R6, 8000h          ; endereço da posição na memória    
+    		   MOV R6, M[R6]          ; caractere na posição
+ 
+    		   MOV R5, '#'
+    		   CMP R6, R5
+			   
+			   POP R6
+			   POP R5
+			   POP R4
+			   POP R3
+			   RET
+			   
 
-            ; Pega as posições atuais do fantasma e do Pac-Man
-            MOV R1, M[LinhaGhost0]
-            MOV R2, M[ColunaGhost0]
-            MOV R3, M[LinhaPacman]
-            MOV R4, M[ColunaPacman]
+EndGhost: POP R7
+		  POP R6
+		  POP R5
+		  POP R2
+		  POP R1
+		  RET
 
-            ; Lógica de movimento: Tenta mover na direção do Pac-Man
-            MOV R5, R3
-            SUB R5, R1  ; R5 = Linha do Pac-Man - Linha do Fantasma
-            MOV R6, R4
-            SUB R6, R2  ; R6 = Coluna do Pac-Man - Coluna do Fantasma
-            
-			MOV R7, R5
-			CMP R7, 0d
-            JMP.P TentaBaixo
-			CMP R7, 0d
-            JMP.N TentaCima
+MoveGhostY: CALL GhostErase
+    		ADD R4, R1
+    		CALL GhostPrint
+			CALL CheckGhostColision
+			JMP EndGhost
 
-            MOV R7, R6
-            CMP R7, 0d
-            JMP.P TentaDireita
-			CMP R7, 0d
-            JMP.N TentaEsquerda
+MoveGhostX:   CALL GhostErase
+    		  ADD R3, R6
+    		  CALL GhostPrint
+			  CALL CheckGhostColision
+			  RET
 
 
+CalcDist: PUSH R1
+		  PUSH R2
+		  PUSH R3
+		  PUSH R4
+
+		  MOV R1, M[ColunaPacman] ; Pacman no eixo x
+		  MOV R2, M[LinhaPacman] ; Pacman no eixo y
+		  ;R3 = fantasma no eixo x
+		  ;R4 = fantasma no eixo y
+		  
+		  SUB R3, R1
+		  SUB R4, R2
+
+		  CMP R3, R0
+		  CALL.N InverteX
+
+		  CMP R4, R0
+		  CALL.N InverteY
+		  
+		  ADD R3, R4 ;R3 é a distância
+		  MOV R5, R3
+		  
+		  POP R4
+		  POP R3
+		  POP R2
+		  POP R1
+		  RET
+
+InverteX: NEG R3
+		 RET
+
+InverteY: NEG R4
+		 RET
+
+MoveGhost:    PUSH R1
+		   	  PUSH R2
+		   	  PUSH R5
+		   	  PUSH R6
+		   	  PUSH R7
+
+			  ;R3 - fantasma eixo x
+			  ;R4 - fantasma eixo y
+
+			  ;ele se move para cima
+DistUp:	 	  PUSH R4
+			  DEC R4
+			  CALL VerificaCol
+			  JMP.Z NoDistUp
+			  CALL CalcDist
+			  MOV R1, R5
+		 	  POP  R4
+			  JMP DistDown  
+
+NoDistUp:	  MOV R1, 200d
+			  POP  R4
+			  ;ele se move para baixo
+			  
+DistDown:	  PUSH R4
+			  INC R4
+			  CALL VerificaCol
+			  JMP.Z NoDistDown
+			  CALL CalcDist
+			  MOV R2, R5
+			  POP R4
+			  JMP DistRight
+			  
+NoDistDown: MOV R2, 200d
+			POP  R4
+
+			  ;Calcula a posição x
+
+DistRight: 	  PUSH R3
+			  INC R3
+			  CALL VerificaCol
+			  JMP.Z NoDistRight
+			  CALL CalcDist
+			  MOV R6, R5
+			  POP R3
+			  JMP DistLeft
+
+NoDistRight:  MOV R6, 200d
+			  POP  R3
+
+DistLeft:     PUSH R3
+			  DEC R3
+			  CALL VerificaCol
+			  JMP.Z NoDistLeft
+			  CALL CalcDist
+			  MOV R7, R5
+			  POP R3
+			  JMP TakeDecision
+
+NoDistLeft:   MOV R7, 200d
+			  POP  R3
+
+			  ;ESCOLHE A MENOR DISTÂNCIA PARA TOMAR DECISÃO
+TakeDecision: CMP R1, R2 
+			  CALL.N UpCMP ;R1 MENOR, R3-=1
+			  CALL.NN DownCMP ;R2 MENOR, R3+=1
+
+			  CMP R6, R7 
+			  CALL.N DirCMP ;R6 MENOR, R4+=1
+			  CALL.NN LeftCMP ;R6 MENOR, R4-=1
+
+			  CMP R2, R7
+			  JMP.N MoveGhostY
+			  CALL MoveGhostX
+			  JMP EndGhost
+
+UpCMP: MOV R2, R1
+	MOV R1, -1
+	RET
+
+DownCMP: MOV R1, 1
+	  RET
+
+DirCMP: MOV R7, R6
+	 MOV R6, 1
+	 RET
+
+LeftCMP:MOV R6, -1
+	 RET
 
 
-TentaDireita:   INC R2 ; Calcula a nova coluna
-                JMP CheckMove
 
-TentaEsquerda:  DEC R2 ; Calcula a nova coluna
-                JMP CheckMove
+GhostErase: PUSH R1
+			PUSH R3
+			PUSH R4
 
-TentaBaixo:     INC R1 ; Calcula a nova linha
-                JMP CheckMove
+			SHL R4, 8d
+			OR  R4, R3
+			MOV M[CURSOR], R4
 
-TentaCima:      DEC R1 ; Calcula a nova linha
-                JMP CheckMove
+			MOV R1, M[Ponto]
+			MOV M[WRITE], R1
+			 
+			POP R4
+			POP R3
+			POP R1
+			RET
+			 
+GhostPrint:  PUSH R1
+			 PUSH R3
+			 PUSH R4
+			 SHL R4, 8d
+			 OR  R4, R3
+			 MOV M[CURSOR], R4
 
-CheckMove:      MOV M[TempLinha], R1; Salva os novos valores calculados na memória temporária
-                MOV M[TempColuna], R2
+			 MOV R1, M[Ghost]
+			 MOV M[WRITE], R1
 
-                ; Prepara argumentos para VerificaParede em R3 e R4
-                MOV R3, M[TempLinha]
-                MOV R4, M[TempColuna]
+			 POP R4
+			 POP R3
+			 POP R1
+			 RET
 
-                CALL VerificaParede ; R6 será 1 se puder mover, 0 se for parede
-                
-                CMP R6, 1d ; Verifica se pode mover (R6 == 1?)
-                JMP.Z UpdatePosition
+CheckGhostColision:     PUSH R1
+    PUSH R2
+    PUSH R3
+    PUSH R4
 
-NoMove:                MOV R1, M[LinhaGhost0]         ; Se não pode mover, redesenha o fantasma na posição original
-                MOV R2, M[ColunaGhost0]
-                JMP DesenhaFantasma
+    ; R3 = Coluna do fantasma
+    ; R4 = Linha do fantasma
+    ; Compare com Pacman
+    MOV R1, M[ColunaPacman]
+    MOV R2, M[LinhaPacman]
 
-UpdatePosition:                 MOV R1, M[TempLinha]; Se pode mover, atualiza a posição do fantasma com os valores temporários
-                MOV R2, M[TempColuna]
-                MOV M[LinhaGhost0], R1
-                MOV M[ColunaGhost0], R2
-                JMP DesenhaFantasma
+    CMP R1, R3
+    JMP.NZ NoGhostHit
+    CMP R2, R4
+    JMP.NZ NoGhostHit
 
-DesenhaFantasma:    MOV R1, M[LinhaGhost0]
-                    MOV R2, M[ColunaGhost0]
-                    MOV R3, 'X'
-                    SHL R1, 8d
-                    OR R1, R2
-                    MOV M[CURSOR], R1
-                    MOV M[WRITE], R3
+    CALL Die
 
-                    ; Verifica colisão com Pac-Man
-                    MOV R1, M[LinhaGhost0]
-                    MOV R2, M[ColunaGhost0]
-                    MOV R3, M[LinhaPacman]
-                    MOV R4, M[ColunaPacman]
-                    CMP R1, R3
-                    JMP.NZ FimGhost
-                    CMP R2, R4
-                    CALL.Z Die
-                    
-FimGhost:           POP R7
-                    POP R6
-                    POP R5
-                    POP R4
-                    POP R3
-                    POP R2
-                    POP R1
-                    RET
-
-;--------------------------------------------------------------------------------------
-; VerificaParede - Sem usar R1 e R2 para entrada
-;--------------------------------------------------------------------------------------
-; Entrada: R3 = nova_linha, R4 = nova_coluna
-; Saída: R6 = 1 se pode mover (sem parede), R6 = 0 se é parede
-VerificaParede: PUSH R5
-                PUSH R7
-
-                MOV R5, R3 ; nova_linha
-                MOV R7, MAP_LINE_LENGTH
-                MUL R7, R5
-                ADD R7, R4 ; nova_coluna
-                ADD R7, 8000h
-                
-                MOV R5, M[R7] ; Pega o caractere na nova posição
-
-                MOV R6, 1       ; Assume que pode mover
-
-                MOV R7, '#'
-                CMP R5, R7
-                JMP.Z EndVerificaParede
-
-                MOV R6, 0       ; É parede -> não pode mover
-
-EndVerificaParede:      POP R7
-                POP R5
-                RET
-
+NoGhostHit:    POP R4
+    POP R3
+    POP R2
+    POP R1
+    RET
 
 ;--------------------------------------------------------------------------------------
 ; Movimento Pacman
